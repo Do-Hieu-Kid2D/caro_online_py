@@ -12,11 +12,25 @@ rooms = {}
 def index():
     return render_template('index.html')
 
-# chơi caro online 2 người
+# Trang chơi caro online 2 người
 @app.route('/caro-onl')
 def onl():
     return render_template('caro-onl.html')
 
+# Trang chơi caro offline 2 người
+@app.route('/caro-off')
+def off():
+    return render_template('caro-off.html')
+
+# Trang chơi caro người - máy
+@app.route('/caro-computer')
+def computer():
+    return render_template('caro-computer.html')
+
+# Trang chơi caro máy - máy
+@app.route('/caro-2computer')
+def twocomputer():
+    return render_template('caro-2computer.html')
 
 # Tạo phòng chơi để join vào phòng 
 @app.route('/create', methods=['POST'])
@@ -109,4 +123,33 @@ def on_leave(data):
     global_player_count -= 1
 
 
+# Cập nhật các bước đánh của người chơi
+@socketio.on('playerMove')
+def on_move(data):
+  room_code = data['room_code']
+  player = next((player for player in rooms.get(room_code, {}).get('players', []) if player['id'] == request.sid), None)
+  if player:
+      # Gửi bước đánh của người chơi hiện tại đến tất cả người chơi trong phòng
+      emit('playerMove', data, room=room_code, include_self=True)
+      # Xác định đối thủ của người chơi hiện tại
+      opponent = next((p for p in rooms[room_code]['players'] if p['id'] != request.sid), None)
+      if opponent and player['symbol'] != opponent['symbol']:
+        # Gửi bước đánh của đối thủ đến toàn bộ phòng, tránh gửi lại cho chính người chơi hiện tại
+        emit('opponentMove', data, room=room_code, skip_sid=request.sid)
+      else:
+          # Handle nếu không phải lượt của người chơi hoặc không xác định được đối thủ
+          emit('invalidMove', {'message': 'It is not your turn or opponent not found'}, room=request.sid)
+  else:
+      # Handle nếu không phải người chơi trong phòng
+      emit('invalidMove', {'message': 'You are not in this room'}, room=request.sid)
+    
+@socketio.on('move_off')
+def on_move(data):
+    emit('move_off', data)
+    
+@socketio.on('move_computer')
+def on_move(data):
+    emit('move_computer', data)
 
+if __name__ == '__main__':
+    socketio.run(app, host="0.0.0.0", port=8000, debug=True, allow_unsafe_werkzeug=True)
