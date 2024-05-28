@@ -17,21 +17,7 @@ def index():
 def onl():
     return render_template('caro-onl.html')
 
-# Trang chơi caro offline 2 người
-@app.route('/caro-off')
-def off():
-    return render_template('caro-off.html')
-
-# Trang chơi caro người - máy
-@app.route('/caro-computer')
-def computer():
-    return render_template('caro-computer.html')
-
-# Trang chơi caro máy - máy
-@app.route('/caro-2computer')
-def twocomputer():
-    return render_template('caro-2computer.html')
-
+global_player_count = 0
 # Tạo phòng chơi để join vào phòng 
 @app.route('/create', methods=['POST'])
 def create():
@@ -42,7 +28,6 @@ def create():
     player_count = 0
     return 'Room created successfully'
 
-global_player_count = 0
 
 # Join phòng chơi (check các điều kiện)
 @socketio.on('join')
