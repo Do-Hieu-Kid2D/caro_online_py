@@ -32,6 +32,7 @@ def create():
 # Join phòng chơi (check các điều kiện)
 @socketio.on('join')
 def on_join(data):
+      # trong data gửi lên có room_code muốn join
       global global_player_count
       room_code = data['room_code']
 
